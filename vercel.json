@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    { "source": "/player", "destination": "/player.html" },
+    { "source": "/facilitator", "destination": "/facilitator.html" },
+    { "source": "/scoreboard", "destination": "/scoreboard.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ]
+}

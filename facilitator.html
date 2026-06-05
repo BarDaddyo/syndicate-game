@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Syndicate — Facilitator</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Auth gate -->
+  <div class="auth-gate" id="auth-gate">
+    <div class="card">
+      <h1>Facilitator Access</h1>
+      <p style="color:var(--text-dim); margin-bottom:24px; font-size:0.9rem;">Enter the facilitator password to continue.</p>
+      <input type="password" id="fac-password" class="input" placeholder="Password" autocomplete="off" style="margin-bottom:12px; text-align:center; letter-spacing:0.2em;">
+      <div id="auth-error" class="error-msg" style="margin-bottom:12px;"></div>
+      <button id="auth-btn" class="btn btn-primary btn-lg">Enter</button>
+    </div>
+  </div>
+
+  <!-- Facilitator Panel -->
+  <div class="fac-page" id="fac-panel" style="display:none;">
+
+    <header class="fac-header">
+      <div class="fac-header-title">THE SYNDICATE — FACILITATOR</div>
+      <div class="fac-status-bar">
+        <div class="fac-status-item">
+          <span class="label">Round:</span>
+          <span class="value" id="status-round">—</span>
+        </div>
+        <div class="fac-status-item">
+          <span class="label">Status:</span>
+          <span class="value" id="status-state">—</span>
+        </div>
+        <div class="fac-status-item">
+          <span class="label">Submissions:</span>
+          <span class="value" id="status-subs">0/23</span>
+        </div>
+        <div class="fac-status-item">
+          <span class="label">Players:</span>
+          <span class="value" id="status-players">0</span>
+        </div>
+        <div id="fac-timer" class="fac-timer hidden"></div>
+      </div>
+    </header>
+
+    <div class="fac-body">
+
+      <!-- Sidebar: controls + round info -->
+      <aside class="fac-sidebar">
+
+        <div>
+          <div class="fac-section-title">Round Control</div>
+          <div class="control-group">
+            <button class="fac-btn primary" id="btn-start-game">Start Game</button>
+            <button class="fac-btn success" id="btn-open-round" disabled>Open Round</button>
+            <button class="fac-btn warning" id="btn-close-round" disabled>Close Round Early</button>
+            <button class="fac-btn" id="btn-reveal" disabled>Reveal Answer</button>
+            <button class="fac-btn" id="btn-next-round" disabled>Next Round</button>
+            <div class="divider"></div>
+            <button class="fac-btn danger" id="btn-reset">Reset Game</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="fac-section-title">Current Round</div>
+          <div class="round-info-box" id="round-info-box">
+            <div class="round-info-q" id="round-question-text">—</div>
+            <div class="round-info-answer" id="round-answer-text" style="display:none;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="fac-section-title">Tools</div>
+          <div class="control-group">
+            <button class="fac-btn" onclick="window.open('/scoreboard', '_blank')">Open Scoreboard</button>
+            <button class="fac-btn" onclick="window.open('/', '_blank')">Open Login Page</button>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Main area: submissions + leaderboard -->
+      <main class="fac-main">
+
+        <div class="submission-panel">
+          <div class="fac-section-title">
+            Team Submissions (<span id="sub-count">0</span> / 23)
+          </div>
+          <div class="submission-progress">
+            <div class="submission-progress-bar" id="sub-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="submission-grid" id="submission-grid"></div>
+
+          <!-- Wildcard live feed -->
+          <div id="wildcard-feed-section" style="display:none; margin-top:20px;">
+            <div class="fac-section-title">Wildcard Hits</div>
+            <div class="wildcard-feed" id="wildcard-feed"></div>
+          </div>
+        </div>
+
+        <div class="leaderboard-panel">
+          <div class="fac-section-title">Leaderboard</div>
+          <div class="fac-leaderboard" id="fac-leaderboard"></div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/game-data.js"></script>
+  <script src="js/facilitator.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>The Syndicate — Player</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="player-page" id="player-page" style="display:none;">
+    <header class="player-header">
+      <div class="player-header-title">THE SYNDICATE</div>
+      <div class="player-header-info">
+        <div class="player-name-display" id="header-name"></div>
+        <div class="player-team-display" id="header-team"></div>
+      </div>
+    </header>
+    <div class="player-content" id="player-content">
+      <!-- Dynamic content rendered by player.js -->
+    </div>
+  </div>
+
+  <div class="loading-screen" id="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Connecting to game...</div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/game-data.js"></script>
+  <script src="js/player.js"></script>
+</body>
+</html>

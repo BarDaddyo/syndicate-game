@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>The Syndicate</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-hero">
+      <div class="game-title">The Syndicate</div>
+      <div class="game-subtitle">Team Intelligence Challenge</div>
+    </div>
+
+    <div class="login-card">
+      <div class="card">
+        <h2>Join the Game</h2>
+
+        <div class="form-group">
+          <label for="player-name">Your name</label>
+          <input
+            type="text"
+            id="player-name"
+            class="input"
+            placeholder="Enter your full name"
+            autocomplete="off"
+            autocapitalize="words"
+            maxlength="60"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="team-number">Team number</label>
+          <select id="team-number" class="input-select">
+            <option value="">Select your team...</option>
+          </select>
+        </div>
+
+        <div id="error-msg" class="error-msg" style="margin-bottom: 14px;"></div>
+
+        <button id="join-btn" class="btn btn-primary btn-lg">
+          Join the Syndicate
+        </button>
+
+        <div class="player-count-display" id="player-count-display">
+          <span class="count" id="player-count">—</span> players have joined
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/game-data.js"></script>
+  <script>
+    // Populate team dropdown
+    const sel = document.getElementById('team-number');
+    for (let i = 1; i <= 23; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `Team ${i}${i === 23 ? ' (7 players)' : ''}`;
+      sel.appendChild(opt);
+    }
+
+    // Redirect if already logged in
+    const existing = localStorage.getItem('syndicate_player');
+    if (existing) {
+      try {
+        const p = JSON.parse(existing);
+        if (p.id && p.teamNumber) window.location.href = '/player';
+      } catch(e) { localStorage.removeItem('syndicate_player'); }
+    }
+
+    // Live player count
+    async function refreshCount() {
+      const { count } = await db.from('players').select('*', { count: 'exact', head: true });
+      document.getElementById('player-count').textContent = count ?? '0';
+    }
+    refreshCount();
+
+    db.channel('player-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, refreshCount)
+      .subscribe();
+
+    // Join handler
+    const joinBtn = document.getElementById('join-btn');
+    const errorMsg = document.getElementById('error-msg');
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add('visible');
+    }
+    function clearError() { errorMsg.classList.remove('visible'); }
+
+    joinBtn.addEventListener('click', async () => {
+      clearError();
+      const name = document.getElementById('player-name').value.trim();
+      const teamNumber = parseInt(document.getElementById('team-number').value);
+
+      if (!name) { showError('Please enter your name.'); return; }
+      if (!teamNumber) { showError('Please select your team number.'); return; }
+
+      joinBtn.disabled = true;
+      joinBtn.textContent = 'Joining...';
+
+      try {
+        // Check team size
+        const { data: team } = await db.from('teams').select('size').eq('team_number', teamNumber).single();
+        const { count: currentCount } = await db.from('players')
+          .select('*', { count: 'exact', head: true })
+          .eq('team_number', teamNumber);
+
+        if (currentCount >= team.size) {
+          showError(`Team ${teamNumber} is full (max ${team.size} players). Please choose another team.`);
+          joinBtn.disabled = false;
+          joinBtn.textContent = 'Join the Syndicate';
+          return;
+        }
+
+        // Assign team position
+        const teamPosition = currentCount;
+
+        // Insert player
+        const { data: player, error } = await db.from('players').insert({
+          name,
+          team_number: teamNumber,
+          team_position: teamPosition,
+          constraint_role: 'waiting'
+        }).select().single();
+
+        if (error) throw error;
+
+        // Store session
+        localStorage.setItem('syndicate_player', JSON.stringify({
+          id: player.id,
+          name: player.name,
+          teamNumber: player.team_number,
+          teamPosition: player.team_position
+        }));
+
+        window.location.href = '/player';
+      } catch (err) {
+        console.error(err);
+        showError('Something went wrong. Please try again.');
+        joinBtn.disabled = false;
+        joinBtn.textContent = 'Join the Syndicate';
+      }
+    });
+
+    // Allow Enter key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') joinBtn.click();
+    });
+  </script>
+</body>
+</html>
