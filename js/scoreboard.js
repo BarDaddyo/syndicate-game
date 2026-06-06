@@ -224,29 +224,29 @@ function renderRoundClosed(round) {
 
 // ─── Round revealed ───────────────────────────────────────
 
+function buildLeaderboardItem(team, rank, round) {
+  const rankClass = rank <= 3 ? `rank-${rank}` : '';
+  const rankSpanClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+
+  const sub = allSubmissions.find(s => s.round_number === round.roundNumber && s.team_number === team.team_number);
+  const roundPts = sub && sub.points_awarded !== null ? sub.points_awarded : null;
+  const submittedAnswer = sub ? formatNumber(sub.answer) : '—';
+  const roundPtsHtml = roundPts !== null ? `+${roundPts}` : '';
+
+  return `
+    <div class="sb-lb-item ${rankClass}" data-team="${team.team_number}">
+      <div class="sb-lb-rank ${rankSpanClass}">${rank}</div>
+      <div class="sb-lb-team">Team ${team.team_number}</div>
+      <div class="sb-lb-submitted">${submittedAnswer}</div>
+      <div class="sb-lb-round-pts">${roundPtsHtml}</div>
+      <div class="sb-lb-total">${team.score}</div>
+    </div>
+  `;
+}
+
 function renderRoundRevealed(round) {
   const sorted = [...allTeams].sort((a, b) => b.score - a.score);
-  let lbHtml = '';
-
-  sorted.forEach((team, idx) => {
-    const rank = idx + 1;
-    const rankClass = rank <= 3 ? `rank-${rank}` : '';
-    const rankDisplay = rank === 1 ? '1' : rank === 2 ? '2' : rank === 3 ? '3' : `${rank}`;
-    const rankSpanClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-
-    const sub = allSubmissions.find(s => s.round_number === round.roundNumber && s.team_number === team.team_number);
-    const roundPts = sub && sub.points_awarded !== null ? sub.points_awarded : null;
-    const roundPtsHtml = roundPts !== null ? `+${roundPts}` : '';
-
-    lbHtml += `
-      <div class="sb-lb-item ${rankClass}" data-team="${team.team_number}">
-        <div class="sb-lb-rank ${rankSpanClass}">${rankDisplay}</div>
-        <div class="sb-lb-team">Team ${team.team_number}</div>
-        <div class="sb-lb-round-pts">${roundPtsHtml}</div>
-        <div class="sb-lb-total">${team.score}</div>
-      </div>
-    `;
-  });
+  const lbHtml = sorted.map((team, idx) => buildLeaderboardItem(team, idx + 1, round)).join('');
 
   return `
     <div class="sb-revealed">
@@ -266,7 +266,13 @@ function renderRoundRevealed(round) {
         ` : ''}
       </div>
       <div class="sb-leaderboard-panel">
-        <div class="sb-lb-title">Leaderboard</div>
+        <div style="display:grid; grid-template-columns: 44px 1fr auto auto auto; gap:12px; padding:0 16px 8px; font-family:'Barlow Condensed',sans-serif; font-size:0.75rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-dim);">
+          <div></div>
+          <div>Team</div>
+          <div style="text-align:right;">Submitted</div>
+          <div style="text-align:right;">This Round</div>
+          <div style="text-align:right;">Total</div>
+        </div>
         <div class="sb-leaderboard" id="sb-leaderboard">${lbHtml}</div>
       </div>
     </div>
@@ -277,7 +283,7 @@ function renderLeaderboard() {
   const lb = document.getElementById('sb-leaderboard');
   if (!lb) return;
 
-  // FLIP animation
+  // FLIP animation — capture positions before update
   const items = lb.querySelectorAll('.sb-lb-item');
   const oldPositions = {};
   items.forEach(el => {
@@ -285,27 +291,8 @@ function renderLeaderboard() {
   });
 
   const sorted = [...allTeams].sort((a, b) => b.score - a.score);
-  let lbHtml = '';
   const round = GAME_DATA.rounds.find(r => r.roundNumber === gameState?.current_round);
-
-  sorted.forEach((team, idx) => {
-    const rank = idx + 1;
-    const rankClass = rank <= 3 ? `rank-${rank}` : '';
-    const rankSpanClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-    const sub = round ? allSubmissions.find(s => s.round_number === round.roundNumber && s.team_number === team.team_number) : null;
-    const roundPts = sub && sub.points_awarded !== null ? sub.points_awarded : null;
-
-    lbHtml += `
-      <div class="sb-lb-item ${rankClass}" data-team="${team.team_number}">
-        <div class="sb-lb-rank ${rankSpanClass}">${rank}</div>
-        <div class="sb-lb-team">Team ${team.team_number}</div>
-        <div class="sb-lb-round-pts">${roundPts !== null ? `+${roundPts}` : ''}</div>
-        <div class="sb-lb-total">${team.score}</div>
-      </div>
-    `;
-  });
-
-  lb.innerHTML = lbHtml;
+  lb.innerHTML = sorted.map((team, idx) => buildLeaderboardItem(team, idx + 1, round)).join('');
 
   // Animate new positions
   const newItems = lb.querySelectorAll('.sb-lb-item');

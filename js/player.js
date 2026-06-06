@@ -345,6 +345,8 @@ async function renderRoundRevealed(round) {
   const rank = teams ? teams.findIndex(t => t.team_number === player.teamNumber) + 1 : '?';
 
   const pointsClass = pointsEarned > 0 ? 'positive' : 'zero';
+  const submittedAnswer = sub ? formatNumber(sub.answer) : '—';
+  const noSubmission = !sub;
 
   document.getElementById('player-content').innerHTML = `
     <div class="round-header">
@@ -355,8 +357,16 @@ async function renderRoundRevealed(round) {
     </div>
 
     <div class="reveal-answer-card">
-      <div class="reveal-answer-label">Correct Answer</div>
-      <div class="reveal-answer-value">${formatNumber(round.answer)}</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; text-align:center;">
+        <div>
+          <div class="reveal-answer-label">Your Answer</div>
+          <div class="reveal-answer-value" style="color:${noSubmission ? 'var(--text-dim)' : 'var(--text-mid)'}; font-size:2.5rem;">${submittedAnswer}</div>
+        </div>
+        <div>
+          <div class="reveal-answer-label">Correct Answer</div>
+          <div class="reveal-answer-value">${formatNumber(round.answer)}</div>
+        </div>
+      </div>
     </div>
 
     <div class="points-earned-card">
