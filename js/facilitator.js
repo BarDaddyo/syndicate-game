@@ -205,15 +205,22 @@ function setAllBtnsLoading() {
 async function assignConstraints(roundNumber) {
   if (!allPlayers.length) return;
 
-  const teamSizeMap = {};
-  allTeams.forEach(t => { teamSizeMap[t.team_number] = t.size; });
+  // Count actual players present per team (not the team's max size)
+  const playerCountByTeam = {};
+  allPlayers.forEach(p => {
+    playerCountByTeam[p.team_number] = (playerCountByTeam[p.team_number] || 0) + 1;
+  });
 
   const updates = allPlayers.map(p => ({
     id: p.id,
     name: p.name,
     team_number: p.team_number,
     team_position: p.team_position,
-    constraint_role: getConstraintForRound(p.team_position, roundNumber, teamSizeMap[p.team_number] || 6)
+    constraint_role: getConstraintForRound(
+      p.team_position,
+      roundNumber,
+      playerCountByTeam[p.team_number] || 1
+    )
   }));
 
   // Batch in chunks of 50

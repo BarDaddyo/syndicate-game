@@ -161,12 +161,27 @@ const ROLES = {
   }
 };
 
-const ROLE_ORDER_6 = ['speaker', 'yesno', 'drawing', 'fixedphrase', 'physical', 'numbers'];
-const ROLE_ORDER_7 = ['speaker', 'yesno', 'drawing', 'fixedphrase', 'physical', 'numbers', 'silent'];
+// Non-Speaker role lists (Speaker is always assigned separately first)
+const NON_SPEAKER_ROLES   = ['yesno', 'drawing', 'fixedphrase', 'physical', 'numbers'];
+const NON_SPEAKER_ROLES_7 = ['yesno', 'drawing', 'fixedphrase', 'physical', 'numbers', 'silent'];
 
-function getConstraintForRound(teamPosition, roundNumber, teamSize) {
-  const roles = teamSize === 7 ? ROLE_ORDER_7 : ROLE_ORDER_6;
-  return roles[(teamPosition + roundNumber - 1) % roles.length];
+// numPlayers = actual players currently on the team (not the team's max size).
+// Guarantees exactly one Speaker per round regardless of team size.
+// Non-Speaker players fill consecutive slots from the non-Speaker role list,
+// rotating each round to vary assignments. Unoccupied roles if team < 6 players.
+function getConstraintForRound(teamPosition, roundNumber, numPlayers) {
+  if (!numPlayers || numPlayers <= 0) return 'waiting';
+
+  // Speaker cycles through every actual player
+  const speakerPosition = (roundNumber - 1) % numPlayers;
+  if (teamPosition === speakerPosition) return 'speaker';
+
+  // Slot among non-Speaker players (0-indexed, skipping the Speaker's position)
+  const slot = teamPosition < speakerPosition ? teamPosition : teamPosition - 1;
+
+  // Team of 7 includes Silent; all other sizes use the 5-role list
+  const nonSpeakerRoles = numPlayers === 7 ? NON_SPEAKER_ROLES_7 : NON_SPEAKER_ROLES;
+  return nonSpeakerRoles[(slot + roundNumber - 1) % nonSpeakerRoles.length];
 }
 
 function formatNumber(n) {
