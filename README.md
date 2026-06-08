@@ -106,10 +106,10 @@ Each player gets a different constraint role each round (rotates using a Latin s
 | **Fixed Phrase** | Can only repeat one assigned phrase |
 | **Physical** | Gestures and pointing only |
 | **Numbers** | Can only say or write numbers |
-| **Silent** | Cannot communicate at all (Team 23 only, 7th player) |
+| **Silent** | Cannot communicate at all (Team 10 only, 7th player) |
 
-Teams 1–22 have 6 players and cycle through the first 6 roles.  
-Team 23 has 7 players and includes the **Silent** role.
+Teams 1–9 and 11–23 have 6 players and cycle through the first 6 roles.  
+Team 10 has 7 players and includes the **Silent** role.
 
 ---
 
