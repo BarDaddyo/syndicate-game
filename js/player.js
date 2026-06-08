@@ -40,6 +40,28 @@ async function init() {
 
   render();
   subscribeToChanges();
+  wireRefreshButton();
+}
+
+function wireRefreshButton() {
+  const btn = document.getElementById('player-refresh-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.classList.add('spinning');
+    try {
+      const [gsRes, teamRes, playerRes] = await Promise.all([
+        db.from('game_state').select('*').eq('id', 1).single(),
+        db.from('teams').select('*').eq('team_number', player.teamNumber).single(),
+        db.from('players').select('*').eq('id', player.id).single()
+      ]);
+      if (gsRes.data) gameState = gsRes.data;
+      if (teamRes.data) teamData = teamRes.data;
+      if (playerRes.data) player.constraint_role = playerRes.data.constraint_role;
+      await render();
+    } finally {
+      setTimeout(() => btn.classList.remove('spinning'), 650);
+    }
+  });
 }
 
 function subscribeToChanges() {
