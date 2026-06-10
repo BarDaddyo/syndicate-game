@@ -97,17 +97,35 @@
 
     joinBtn.addEventListener('click', async () => {
       clearError();
-      const name = document.getElementById('player-name').value.trim();
-      const teamNumber = parseInt(document.getElementById('team-number').value);
-
-      if (!name) { showError('Please enter your name.'); return; }
-      if (!teamNumber) { showError('Please select your team number.'); return; }
-
       joinBtn.disabled = true;
       joinBtn.textContent = 'Joining...';
 
+      const name = document.getElementById('player-name').value.trim();
+      const teamNumber = parseInt(document.getElementById('team-number').value);
+
+      if (!name) { showError('Please enter your name.'); joinBtn.disabled = false; joinBtn.textContent = 'Join the Syndicate'; return; }
+      if (!teamNumber) { showError('Please select your team number.'); joinBtn.disabled = false; joinBtn.textContent = 'Join the Syndicate'; return; }
+
       try {
-        // Check team size
+        // Re-login: if player already exists with this name+team, reuse their record
+        const { data: existingPlayer } = await db.from('players')
+          .select()
+          .eq('name', name)
+          .eq('team_number', teamNumber)
+          .maybeSingle();
+
+        if (existingPlayer) {
+          localStorage.setItem('syndicate_player', JSON.stringify({
+            id: existingPlayer.id,
+            name: existingPlayer.name,
+            teamNumber: existingPlayer.team_number,
+            teamPosition: existingPlayer.team_position
+          }));
+          window.location.href = '/player';
+          return;
+        }
+
+        // New player: check team capacity
         const { data: team } = await db.from('teams').select('size').eq('team_number', teamNumber).single();
         const { count: currentCount } = await db.from('players')
           .select('*', { count: 'exact', head: true })
@@ -120,20 +138,16 @@
           return;
         }
 
-        // Assign team position
-        const teamPosition = currentCount;
-
-        // Insert player
-        const { data: player, error } = await db.from('players').insert({
+        // Upsert player (onConflict guard against race-condition double-inserts)
+        const { data: player, error } = await db.from('players').upsert({
           name,
           team_number: teamNumber,
-          team_position: teamPosition,
+          team_position: currentCount,
           constraint_role: 'waiting'
-        }).select().single();
+        }, { onConflict: 'name,team_number' }).select().single();
 
         if (error) throw error;
 
-        // Store session
         localStorage.setItem('syndicate_player', JSON.stringify({
           id: player.id,
           name: player.name,
@@ -143,6 +157,24 @@
 
         window.location.href = '/player';
       } catch (err) {
+        // Unique constraint violation means the player already exists — look them up and redirect
+        if (err.code === '23505') {
+          const { data: existing } = await db.from('players')
+            .select()
+            .eq('name', name)
+            .eq('team_number', teamNumber)
+            .maybeSingle();
+          if (existing) {
+            localStorage.setItem('syndicate_player', JSON.stringify({
+              id: existing.id,
+              name: existing.name,
+              teamNumber: existing.team_number,
+              teamPosition: existing.team_position
+            }));
+            window.location.href = '/player';
+            return;
+          }
+        }
         console.error(err);
         showError('Something went wrong. Please try again.');
         joinBtn.disabled = false;
